@@ -18,7 +18,7 @@ export function Navbar() {
   const logoutMut = useMutation({
     mutationFn: authApi.logout,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      queryClient.setQueryData(["auth", "me"], { authenticated: false });
       navigate({ to: "/docs", replace: true });
     },
   });

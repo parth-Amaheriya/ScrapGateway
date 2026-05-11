@@ -453,9 +453,35 @@ function ProjectDetailsPageContent() {
               Permanently delete{" "}
               <span className="font-medium text-foreground">{p.project_id}</span>.
             </p>
-            <Button variant="destructive" onClick={() => deleteMut.mutate()}>
-              <Trash2 className="h-4 w-4" /> {deleteMut.isPending ? "Deleting..." : "Delete project"}
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteMut.isPending ? "Deleting..." : "Delete project"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the project
+                    and revoke its API key.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+                  <AlertDialogAction
+                    onClick={() => deleteMut.mutate()}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Delete project
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>

@@ -171,10 +171,6 @@ function IssuesAdminPageContent() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
-                <PlusCircle className="h-4 w-4" />
-                Create Issue
-              </Button>
               <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
                 <RefreshCcw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                 Refresh
@@ -183,8 +179,8 @@ function IssuesAdminPageContent() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-3">
             <Metric label="Total issues" value={String(issues.length)} />
-            <Metric label="Filtered issues" value={String(filteredIssues.length)} />
-            <Metric label="Open selected" value={selectedIssue?.status ?? "-"} />
+            <Metric label="Open issues" value={String(issues.filter((i) => i.status === "open").length)} />
+            <Metric label="Closed issues" value={String(issues.filter((i) => i.status === "closed").length)} />
           </CardContent>
         </Card>
 

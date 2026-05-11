@@ -184,7 +184,7 @@ class KeyProvisioner:
     @staticmethod
     def create_key_package(plan_config):
         api_key = f"sk_{secrets.token_hex(16)}"
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
         return {
             "project_id": plan_config["project_id"],
             "pool_size": plan_config["pool_size"],
@@ -644,7 +644,7 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         try:
             patch = self._read_json()
-            edit_timestamp = datetime.now(timezone.utc).isoformat()
+            edit_timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
             raw_keys = (
                 "pool_size",
                 "cost_per_request",
