@@ -1,35 +1,3 @@
-# API Key Dashboard
-
-A simple dashboard for managing API keys, quotas, and provisioning.
-
----
-
-## Frontend Setup
-
-Navigate to the frontend directory and install dependencies:
-
-```bash
-cd api-key-dashboard
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
----
-
-## Backend Setup
-
-Run the backend provisioning server:
-
-```bash
-python provisioner.py --serve
-```
-
----
 
 ## Requirements
 
@@ -68,10 +36,21 @@ api-key-dashboard/
 └── README.md
 ```
 
-## .env
+## for backend .env
 ```
 
 REDIS_PASSWORD=
 REDIS_PORT=
 REDIS_HOST=
+
+MONGODB_URI=
+ADMIN_JWT_SECRET=
+ADMIN_USERNAME=
+ADMIN_PASSWORD=
+
+```
+
+## for Frontend .env
+```
+VITE_API_BASE_URL=http://localhost:8000/api
 ```

@@ -16,7 +16,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-r = redis.Redis(host='172.27.131.136', port=6379, decode_responses=True, password='@ct[6355]R3DI$')
+REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "")
+REDIS_PORT=os.getenv("REDIS_PORT", "6379")
+REDIS_HOST=os.getenv("REDIS_HOST", "127.0.0.1")
+
+# print(REDIS_PASSWORD,REDIS_PORT,REDIS_HOST  )
+print(f"Connecting to Redis at {REDIS_HOST}:{REDIS_PORT} with password: {'***' if REDIS_PASSWORD else '(none)'}")
+
+r = redis.Redis(host=REDIS_HOST, port=int(REDIS_PORT), decode_responses=True, password=REDIS_PASSWORD)
 
 AUTH_COOKIE_NAME = "qk_admin_token"
 JWT_SECRET = os.getenv("ADMIN_JWT_SECRET", "quota-key-dashboard-admin-secret")
