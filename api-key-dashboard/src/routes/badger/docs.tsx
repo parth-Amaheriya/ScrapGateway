@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { issueApi, type IssueImagePayload } from "@/api/issues";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/docs")({
+export const Route = createFileRoute("/badger/docs")({
   head: () => ({
     meta: [
       { title: "API Documentation — Scraping Gateway" },

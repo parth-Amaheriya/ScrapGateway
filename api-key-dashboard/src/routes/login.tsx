@@ -109,7 +109,7 @@ function LoginPage() {
               {loginMut.isPending ? "Signing in..." : "Sign in"}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              Public documentation is still available <Link to="/docs" className="font-medium text-foreground underline-offset-4 hover:underline">here</Link>.
+              Public documentation is still available <Link to="/badger/docs" className="font-medium text-foreground underline-offset-4 hover:underline">here</Link>.
             </div>
           </form>
         </CardContent>

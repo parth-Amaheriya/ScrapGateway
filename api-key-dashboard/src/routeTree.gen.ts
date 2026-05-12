@@ -11,11 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IssuesRouteImport } from './routes/issues'
-import { Route as DocsRouteImport } from './routes/docs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as BadgerDocsRouteImport } from './routes/badger/docs'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -25,11 +25,6 @@ const LoginRoute = LoginRouteImport.update({
 const IssuesRoute = IssuesRouteImport.update({
   id: '/issues',
   path: '/issues',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsRoute = DocsRouteImport.update({
-  id: '/docs',
-  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -52,21 +47,26 @@ const ProjectsIdRoute = ProjectsIdRouteImport.update({
   path: '/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BadgerDocsRoute = BadgerDocsRouteImport.update({
+  id: '/badger/docs',
+  path: '/badger/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/docs': typeof DocsRoute
   '/issues': typeof IssuesRoute
   '/login': typeof LoginRoute
+  '/badger/docs': typeof BadgerDocsRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/docs': typeof DocsRoute
   '/issues': typeof IssuesRoute
   '/login': typeof LoginRoute
+  '/badger/docs': typeof BadgerDocsRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects': typeof ProjectsIndexRoute
@@ -74,9 +74,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/docs': typeof DocsRoute
   '/issues': typeof IssuesRoute
   '/login': typeof LoginRoute
+  '/badger/docs': typeof BadgerDocsRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -85,27 +85,27 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/docs'
     | '/issues'
     | '/login'
+    | '/badger/docs'
     | '/projects/$id'
     | '/projects/new'
     | '/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/docs'
     | '/issues'
     | '/login'
+    | '/badger/docs'
     | '/projects/$id'
     | '/projects/new'
     | '/projects'
   id:
     | '__root__'
     | '/'
-    | '/docs'
     | '/issues'
     | '/login'
+    | '/badger/docs'
     | '/projects/$id'
     | '/projects/new'
     | '/projects/'
@@ -113,9 +113,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DocsRoute: typeof DocsRoute
   IssuesRoute: typeof IssuesRoute
   LoginRoute: typeof LoginRoute
+  BadgerDocsRoute: typeof BadgerDocsRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -135,13 +135,6 @@ declare module '@tanstack/react-router' {
       path: '/issues'
       fullPath: '/issues'
       preLoaderRoute: typeof IssuesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs': {
-      id: '/docs'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -172,14 +165,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/badger/docs': {
+      id: '/badger/docs'
+      path: '/badger/docs'
+      fullPath: '/badger/docs'
+      preLoaderRoute: typeof BadgerDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DocsRoute: DocsRoute,
   IssuesRoute: IssuesRoute,
   LoginRoute: LoginRoute,
+  BadgerDocsRoute: BadgerDocsRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,

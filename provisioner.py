@@ -16,6 +16,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+if "REDIS_URL" not in os.environ and "REDIS_HOST" not in os.environ and "REDIS_PORT" not in os.environ:
+    print("*"*60)
+    print("Warning: No Redis configuration found in environment variables. Defaulting to localhost:6379 with no password.")
+    print("*"*60)
+
+if "ADMIN_USERNAME" not in os.environ or "ADMIN_PASSWORD" not in os.environ:
+    print("*"*60)
+    print("Warning: No admin credentials found in environment variables. Defaulting to username 'admin' and password 'admin'.")
+    print("*"*60)
+
 REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "")
 REDIS_PORT=os.getenv("REDIS_PORT", "6379")
 REDIS_HOST=os.getenv("REDIS_HOST", "127.0.0.1")
@@ -34,7 +44,6 @@ AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 _mongo_client = None
 _issue_collection = None
 
-print(os.getenv("ADMIN_USERNAME"),os.getenv("ADMIN_PASSWORD"))
 def _get_issue_collection():
     global _mongo_client, _issue_collection
 
@@ -379,11 +388,9 @@ class ApiHandler(BaseHTTPRequestHandler):
 
     def _current_admin(self):
         token = self._get_cookie_value(AUTH_COOKIE_NAME)
-        print(token)
         if not token:
             return None
         payload = _verify_jwt(token)
-        print(payload)
         if not payload:
             return None
         return {
@@ -749,7 +756,6 @@ class ApiHandler(BaseHTTPRequestHandler):
 
         return self._send_json(200, {"ok": True})
 
-
 def run_http_server(host="0.0.0.0", port=8000):
     server = ThreadingHTTPServer((host, port), ApiHandler)
     print(f"HTTP backend listening on http://{host}:{port}/api")
@@ -758,8 +764,12 @@ def run_http_server(host="0.0.0.0", port=8000):
 
 if __name__ == "__main__":
     if "--serve" in sys.argv:
-        run_http_server()
-        raise SystemExit(0)
+        if 'HOST' in os.environ and 'PORT' in os.environ:
+            run_http_server(host=os.environ['HOST'], port=int(os.environ['PORT']))
+            raise SystemExit(0)
+        else:
+            run_http_server()
+            raise SystemExit(0)
 
     variables = {
         "pool_size": 1000,

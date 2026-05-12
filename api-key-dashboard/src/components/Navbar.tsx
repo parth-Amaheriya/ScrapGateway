@@ -19,7 +19,7 @@ export function Navbar() {
     mutationFn: authApi.logout,
     onSuccess: async () => {
       queryClient.setQueryData(["auth", "me"], { authenticated: false });
-      navigate({ to: "/docs", replace: true });
+      navigate({ to: "/badger/docs", replace: true });
     },
   });
 

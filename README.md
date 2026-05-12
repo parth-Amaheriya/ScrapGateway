@@ -48,6 +48,9 @@ ADMIN_JWT_SECRET=
 ADMIN_USERNAME=
 ADMIN_PASSWORD=
 
+HOST=
+PORT=
+
 ```
 
 ## for Frontend .env
