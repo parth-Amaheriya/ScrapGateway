@@ -57,6 +57,7 @@ function IssuesAdminPage() {
 
 function IssuesAdminPageContent() {
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
@@ -83,9 +84,9 @@ function IssuesAdminPageContent() {
 
   const filteredIssues = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return issues ?? [];
-
     return (issues ?? []).filter((issue) => {
+      if (statusFilter !== "all" && issue.status !== statusFilter) return false;
+      if (!needle) return true;
       return [
         issue.issue_id,
         issue.domain,
@@ -98,7 +99,7 @@ function IssuesAdminPageContent() {
         .toLowerCase()
         .includes(needle);
     });
-  }, [issues, query]);
+  }, [issues, query, statusFilter]);
 
   const selectedIssue = filteredIssues.find((issue) => issue.issue_id === selectedIssueId) ?? filteredIssues[0] ?? null;
 
@@ -189,6 +190,32 @@ function IssuesAdminPageContent() {
             <CardHeader>
               <CardTitle>All Issues</CardTitle>
               <CardDescription>Search by domain, email, API key, or description.</CardDescription>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant={statusFilter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  type="button"
+                  variant={statusFilter === "open" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter("open")}
+                >
+                  Open
+                </Button>
+                <Button
+                  type="button"
+                  variant={statusFilter === "closed" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter("closed")}
+                >
+                  Closed
+                </Button>
+              </div>
               <div className="pt-2">
                 <Input
                   value={query}
@@ -238,7 +265,7 @@ function IssuesAdminPageContent() {
                     {filteredIssues.length === 0 ? (
                       <tr>
                         <td className="px-3 py-8 text-center text-muted-foreground" colSpan={5}>
-                          No issues match your search.
+                          No issues match your filters.
                         </td>
                       </tr>
                     ) : null}

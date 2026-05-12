@@ -1,7 +1,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { issueApi, type IssueImagePayload } from "@/api/issues";
+import { issueApi, type IssueImagePayload, type IssueRecord } from "@/api/issues";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/badger/docs")({
@@ -199,6 +199,8 @@ const NAV: { group: string; items: { id: string; label: string }[] }[] = [
 function DocsPage() {
   const [active, setActive] = useState("introduction");
   const [issueOpen, setIssueOpen] = useState(false);
+  const [trackOpen, setTrackOpen] = useState(false);
+  const [trackIssueId, setTrackIssueId] = useState("");
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -259,6 +261,16 @@ function DocsPage() {
             onClick={() => setIssueOpen(true)}
             className="rounded-md border border-[var(--docs-amber)] bg-[var(--docs-surface-2)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg)] transition-colors" >
             Raise an Issue
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setTrackIssueId("");
+              setTrackOpen(true);
+            }}
+            className="ml-2 rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] transition-colors hover:text-[var(--docs-fg)]"
+          >
+            Track Issue
           </button>
         </div>
       </header>
@@ -1011,12 +1023,33 @@ console.log(data.status_code, data.proxy);`}
         </main>
       </div>
 
-      {issueOpen && <IssueModal onClose={() => setIssueOpen(false)} />}
+      {issueOpen && (
+        <IssueModal
+          onClose={() => setIssueOpen(false)}
+          onTrackIssue={(issueId) => {
+            setIssueOpen(false);
+            setTrackIssueId(issueId);
+            setTrackOpen(true);
+          }}
+        />
+      )}
+      {trackOpen && (
+        <TrackIssueModal
+          initialIssueId={trackIssueId}
+          onClose={() => setTrackOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
-function IssueModal({ onClose }: { onClose: () => void }) {
+function IssueModal({
+  onClose,
+  onTrackIssue,
+}: {
+  onClose: () => void;
+  onTrackIssue: (issueId: string) => void;
+}) {
   const [domain, setDomain] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [email, setEmail] = useState("");
@@ -1026,6 +1059,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [createdIssue, setCreatedIssue] = useState<IssueRecord | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -1083,7 +1117,7 @@ function IssueModal({ onClose }: { onClose: () => void }) {
     setSubmitting(true);
     try {
       const imagePayload = await Promise.all(images.map((file) => fileToPayload(file)));
-      await issueApi.create({
+      const created = await issueApi.create({
         domain: domain.trim(),
         api_key: apiKey.trim(),
         email: email.trim(),
@@ -1091,8 +1125,8 @@ function IssueModal({ onClose }: { onClose: () => void }) {
         images: imagePayload,
         source: "docs",
       });
+      setCreatedIssue(created);
       toast.success("Issue submitted");
-      onClose();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to submit issue");
     } finally {
@@ -1135,6 +1169,51 @@ function IssueModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
+        {createdIssue ? (
+          <div className="px-5 py-5 space-y-4">
+            <div className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface-2)] p-4">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]">
+                Issue submitted
+              </div>
+              <div className="mt-2 break-all font-mono text-sm text-[var(--docs-fg)]">
+                {createdIssue.issue_id}
+              </div>
+              <div className="mt-2 text-sm leading-6 text-[var(--docs-fg-soft)]">
+                Save this issue id to check status later.
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--docs-border)] pt-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(createdIssue.issue_id);
+                    toast.success("Issue id copied");
+                  } catch {
+                    toast.error("Failed to copy issue id");
+                  }
+                }}
+                className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
+              >
+                Copy Issue ID
+              </button>
+              <button
+                type="button"
+                onClick={() => onTrackIssue(createdIssue.issue_id)}
+                className="rounded-md border border-[var(--docs-amber)] bg-[var(--docs-amber)] px-3 py-1.5 font-mono text-xs font-semibold text-white hover:opacity-90 transition-opacity"
+              >
+                Track Issue Status
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           <div>
             <label className={labelCls}>Domain</label>
@@ -1264,6 +1343,149 @@ function IssueModal({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TrackIssueModal({
+  initialIssueId,
+  onClose,
+}: {
+  initialIssueId?: string;
+  onClose: () => void;
+}) {
+  const [issueId, setIssueId] = useState(initialIssueId ?? "");
+  const [trackedIssue, setTrackedIssue] = useState<IssueRecord | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    setIssueId(initialIssueId ?? "");
+  }, [initialIssueId]);
+
+  const handleTrack = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const trimmed = issueId.trim();
+    if (!trimmed) {
+      setError("Issue id is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setTrackedIssue(null);
+    try {
+      const issue = await issueApi.get(trimmed);
+      setTrackedIssue(issue);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to track issue");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputCls =
+    "w-full rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-2 font-mono text-[13px] text-[var(--docs-fg)] placeholder:text-[var(--docs-muted)] focus:outline-none focus:border-[var(--docs-amber)] focus:ring-1 focus:ring-[var(--docs-amber)]/40 transition-colors";
+  const labelCls =
+    "mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]";
+
+  return (
+    <div
+      className="docs-theme fixed inset-0 z-50 flex items-center justify-center px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="track-issue-modal-title"
+    >
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[var(--docs-border)] bg-[var(--docs-bg)] shadow-md">
+        <div className="flex items-center justify-between border-b border-[var(--docs-border)] px-5 py-3">
+          <h3 id="track-issue-modal-title" className="text-base font-semibold text-[var(--docs-fg)]">
+            Track Issue Status
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded p-1 font-mono text-sm text-[var(--docs-muted)] hover:text-[var(--docs-fg)]"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleTrack} className="px-5 py-4 space-y-4">
+          <div>
+            <label className={labelCls}>Issue ID</label>
+            <input
+              type="text"
+              value={issueId}
+              onChange={(e) => setIssueId(e.target.value)}
+              placeholder="Enter issue id"
+              className={inputCls}
+            />
+            {error ? <div className="mt-1 font-mono text-[11px] text-[var(--docs-danger)]">{error}</div> : null}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-[var(--docs-border)] pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-md border border-[var(--docs-amber)] bg-[var(--docs-amber)] px-3 py-1.5 font-mono text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
+            >
+              {loading ? "Tracking..." : "Track Issue"}
+            </button>
+          </div>
+        </form>
+
+        {trackedIssue ? (
+          <div className="border-t border-[var(--docs-border)] px-5 py-4 space-y-3">
+            <div className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface-2)] p-4">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]">
+                Current status
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="rounded-full border border-[var(--docs-border)] bg-[var(--docs-surface)] px-2 py-0.5 font-mono text-xs text-[var(--docs-fg)]">
+                  {trackedIssue.status}
+                </span>
+                <span className="font-mono text-xs text-[var(--docs-muted)]">
+                  {trackedIssue.issue_id}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-2 text-sm text-[var(--docs-fg-soft)]">
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]">Domain</span>
+                <div className="mt-1 break-all text-[var(--docs-fg)]">{trackedIssue.domain}</div>
+              </div>
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]">Email</span>
+                <div className="mt-1 break-all text-[var(--docs-fg)]">{trackedIssue.email}</div>
+              </div>
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--docs-muted)]">Updated</span>
+                <div className="mt-1 text-[var(--docs-fg)]">{new Date(trackedIssue.updated_at).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
