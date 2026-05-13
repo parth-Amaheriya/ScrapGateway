@@ -382,21 +382,21 @@ function ProjectDetailsPageContent() {
                 value={form.recovery_per_second}
                 editing={editMode}
                 onChange={(v) => setField("recovery_per_second", v)}
-                step={0.1}
+                step={1}
               />
               <NumberField
                 label="Cost per request"
                 value={form.cost_per_request}
                 editing={editMode}
                 onChange={(v) => setField("cost_per_request", v)}
-                step={0.01}
+                step={1}
               />
               <NumberField
                 label="Penalty increase"
                 value={form.penalty_increase}
                 editing={editMode}
                 onChange={(v) => setField("penalty_increase", v)}
-                step={0.1}
+                step={1}
               />
               <NumberField
                 label="Total quota"

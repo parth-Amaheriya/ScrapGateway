@@ -39,11 +39,11 @@ const fields: {
 }[] = [
     { name: "project_id", label: "Project ID", type: "text", placeholder: "my-project" },
     { name: "pool_size", label: "Pool Size", type: "number", placeholder: "50" },
-    { name: "cost_per_request", label: "Cost Per Request", type: "number", step: "1.0", placeholder: "1" },
-    { name: "recovery_per_second", label: "Recovery Per Second", type: "number", step: "1.0", placeholder: "5" },
-    { name: "penalty_increase", label: "Penalty Increase", type: "number", step: "1.0", placeholder: "2" },
+    { name: "cost_per_request", label: "Cost Per Request", type: "number", placeholder: "1" },
+    { name: "recovery_per_second", label: "Recovery Per Second", type: "number", placeholder: "5" },
+    { name: "penalty_increase", label: "Penalty Increase", type: "number",  placeholder: "2" },
     { name: "total_quota", label: "Total Quota", type: "number", placeholder: "100000" },
-    { name: "average_latency", label: "Average Latency (s)", type: "number", step: "1.0", placeholder: "4.0" },
+    { name: "average_latency", label: "Average Latency (s)", type: "number", placeholder: "4.0" },
     { name: "failure_rate", label: "Failure Rate (0-1)", type: "number", step: "0.01", placeholder: "0.05" },
     { name: "safety_margin", label: "Safety Margin (0-1)", type: "number", step: "0.01", placeholder: "0.2" },
   ];

@@ -132,23 +132,15 @@ export function normalizeAllowedDomains(
 }
 
 export function computeMetrics(input: ProjectInput): ComputedMetrics {
-  const safety = 1 - input.safety_margin;
-  const max_concurrency = Math.max(
-    1,
-    Math.floor(input.pool_size * safety * (1 - input.failure_rate))
-  );
-  const max_rps =
-    Math.round(
-      (max_concurrency / Math.max(0.05, input.average_latency)) * 100
-    ) / 100;
-  const etc_minutes =
-    max_rps > 0
-      ? Math.round((input.total_quota / max_rps / 60) * 10) / 10
-      : 0;
-  const hits_per_proxy =
-    input.pool_size > 0
-      ? Math.round((input.total_quota / input.pool_size) * 10) / 10
-      : 0;
+  const blended_cost = ((1 - input.failure_rate) * input.cost_per_request) + (input.failure_rate * 100);
+  const penalty_drag = (1 - input.failure_rate) + (input.failure_rate / (1 + input.penalty_increase));
+  const total_recovery = input.pool_size * input.recovery_per_second * penalty_drag;
+
+  const optimal_s = (total_recovery * input.average_latency * input.safety_margin) / blended_cost;
+  const max_concurrency = Math.floor(optimal_s);
+  const max_rps = Math.round((optimal_s / input.average_latency) * 100) / 100;
+  const etc_minutes = max_rps > 0 ? Math.round((input.total_quota / max_rps / 60) * 100) / 100 : 0;
+  const hits_per_proxy = input.pool_size > 0 ? Math.round((input.total_quota / input.pool_size) * 100) / 100 : 0;
   return { max_concurrency, max_rps, etc_minutes, hits_per_proxy };
 }
 
