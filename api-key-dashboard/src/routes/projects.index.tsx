@@ -68,10 +68,38 @@ function ProjectsPageContent() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const copyKey = (key: string) => {
-    navigator.clipboard?.writeText(key);
+  // const copyKey = (key: string) => {
+  //   navigator.clipboard?.writeText(key);
+  //   toast.success("API key copied");
+  // };
+  const copyKey = async (key: string) => {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(key);
+    } else {
+      // fallback for insecure origins / unsupported browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = key;
+
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+
+      document.body.appendChild(textArea);
+
+      textArea.focus();
+      textArea.select();
+
+      document.execCommand("copy");
+
+      document.body.removeChild(textArea);
+    }
+
     toast.success("API key copied");
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to copy API key");
+  }
+};
 
   return (
     <DashboardLayout>

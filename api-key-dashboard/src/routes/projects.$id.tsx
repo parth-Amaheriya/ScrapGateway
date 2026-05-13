@@ -254,6 +254,38 @@ function ProjectDetailsPageContent() {
 
       return next;
     });
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+
+        document.body.appendChild(textArea);
+
+        textArea.focus();
+        textArea.select();
+
+        const success = document.execCommand("copy");
+
+        document.body.removeChild(textArea);
+
+        if (!success) {
+          throw new Error("Copy command failed");
+        }
+      }
+
+      toast.success("API key copied");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to copy API key");
+    }
+  };
 
   const handleSave = () => {
     if (Object.keys(dirtyFields).length === 0) {
@@ -296,10 +328,7 @@ function ProjectDetailsPageContent() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  navigator.clipboard?.writeText(p.api_key);
-                  toast.success("API key copied");
-                }}
+                onClick={() => copyToClipboard(p.api_key)}
               >
                 <Copy className="h-3.5 w-3.5" /> Copy
               </Button>

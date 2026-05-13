@@ -338,7 +338,7 @@ class RedisManager:
 class ApiHandler(BaseHTTPRequestHandler):
     def _cors_origin(self):
         origin = self.headers.get("Origin")
-        return origin or os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:5173")
+        return origin or os.getenv("FRONTEND_ORIGIN", "http://172.27.131.136:8000")
 
     def _set_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", self._cors_origin())
@@ -458,8 +458,8 @@ class ApiHandler(BaseHTTPRequestHandler):
                 return self._send_json(503, {"error": str(exc)})
 
         if path.startswith("/api/issues/"):
-            if not self._require_admin():
-                return
+            # if not self._require_admin():
+            #     return
             issue_id = path.split("/api/issues/", 1)[1].strip("/")
             try:
                 collection = _get_issue_collection()
@@ -523,8 +523,6 @@ class ApiHandler(BaseHTTPRequestHandler):
             return self._send_json(200, {"authenticated": False}, {"Set-Cookie": self._clear_auth_cookie()})
 
         if path == "/api/issues":
-            if not self._require_admin():
-                return
             try:
                 payload = self._read_json()
                 required = ["domain", "api_key", "email", "description"]

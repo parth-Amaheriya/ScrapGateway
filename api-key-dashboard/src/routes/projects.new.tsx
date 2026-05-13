@@ -37,16 +37,16 @@ const fields: {
   placeholder?: string;
   hint?: string;
 }[] = [
-  { name: "project_id", label: "Project ID", type: "text", placeholder: "my-project" },
-  { name: "pool_size", label: "Pool Size", type: "number", placeholder: "50" },
-  { name: "cost_per_request", label: "Cost Per Request", type: "number", step: "0.01", placeholder: "1" },
-  { name: "recovery_per_second", label: "Recovery Per Second", type: "number", step: "0.1", placeholder: "5" },
-  { name: "penalty_increase", label: "Penalty Increase", type: "number", step: "0.1", placeholder: "2" },
-  { name: "total_quota", label: "Total Quota", type: "number", placeholder: "100000" },
-  { name: "average_latency", label: "Average Latency (s)", type: "number", step: "1.0", placeholder: "4.0" },
-  { name: "failure_rate", label: "Failure Rate (0-1)", type: "number", step: "0.01", placeholder: "0.05" },
-  { name: "safety_margin", label: "Safety Margin (0-1)", type: "number", step: "0.01", placeholder: "0.2" },
-];
+    { name: "project_id", label: "Project ID", type: "text", placeholder: "my-project" },
+    { name: "pool_size", label: "Pool Size", type: "number", placeholder: "50" },
+    { name: "cost_per_request", label: "Cost Per Request", type: "number", step: "1.0", placeholder: "1" },
+    { name: "recovery_per_second", label: "Recovery Per Second", type: "number", step: "1.0", placeholder: "5" },
+    { name: "penalty_increase", label: "Penalty Increase", type: "number", step: "1.0", placeholder: "2" },
+    { name: "total_quota", label: "Total Quota", type: "number", placeholder: "100000" },
+    { name: "average_latency", label: "Average Latency (s)", type: "number", step: "1.0", placeholder: "4.0" },
+    { name: "failure_rate", label: "Failure Rate (0-1)", type: "number", step: "0.01", placeholder: "0.05" },
+    { name: "safety_margin", label: "Safety Margin (0-1)", type: "number", step: "0.01", placeholder: "0.2" },
+  ];
 
 function NewProjectPage() {
   return (
@@ -125,15 +125,53 @@ function NewProjectPageContent() {
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(created.api_key);
-                      setCopied(true);
-                      toast.success("API key copied");
-                      setTimeout(() => setCopied(false), 1500);
+                    onClick={async () => {
+                      const apiKey = created?.api_key;
+                      if (!apiKey) {
+                        toast.error("No API key available");
+                        return;
+                      }
+
+                      try {
+                        await navigator.clipboard.writeText(apiKey);
+                        setCopied(true);
+                        toast.success("API key copied to clipboard");
+
+                        setTimeout(() => setCopied(false), 2000);
+                      } catch (err) {
+                        console.error("Copy failed:", err);
+
+                        // Fallback for older browsers or blocked clipboard
+                        try {
+                          const textArea = document.createElement("textarea");
+                          textArea.value = apiKey;
+                          textArea.style.position = "fixed";
+                          textArea.style.left = "-999999px";
+                          textArea.style.top = "-999999px";
+                          document.body.appendChild(textArea);
+                          textArea.focus();
+                          textArea.select();
+
+                          const successful = document.execCommand('copy');
+                          document.body.removeChild(textArea);
+
+                          if (successful) {
+                            setCopied(true);
+                            toast.success("API key copied");
+                            setTimeout(() => setCopied(false), 2000);
+                          } else {
+                            throw new Error("execCommand failed");
+                          }
+                        } catch (fallbackErr) {
+                          toast.error("Failed to copy. Please select and copy manually.");
+                          console.error("Fallback copy also failed:", fallbackErr);
+                        }
+                      }
                     }}
+                    disabled={!created?.api_key}
                   >
                     <Copy className="h-3.5 w-3.5" />
-                    {copied ? "Copied" : "Copy"}
+                    {copied ? "Copied!" : "Copy"}
                   </Button>
                 </div>
               </div>

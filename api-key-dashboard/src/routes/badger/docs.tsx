@@ -25,22 +25,62 @@ export const Route = createFileRoute("/badger/docs")({
 });
 
 /* ---------- helpers ---------- */
-
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+
+  async function copyToClipboard(text: string): Promise<boolean> {
+    if (!text) return false;
+
+    try {
+      // Primary: Modern Clipboard API
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback: execCommand method
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-999999px";
+        textarea.style.top = "-999999px";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        return success;
+      } catch (err) {
+        console.error("Copy failed:", err);
+        return false;
+      }
+    }
+  }
+  
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+
+  const handleCopy = async () => {
+    if (!text) return;
+
+    const success = await copyToClipboard(text);
+
+    if (success) {
+      setStatus("copied");
+    } else {
+      setStatus("failed");
+    }
+
+    setTimeout(() => setStatus("idle"), 1800);
+  };
+
   return (
     <button
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1400);
-        } catch {}
-      }}
+      onClick={handleCopy}
       className="absolute right-2 top-2 rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-2 py-1 font-mono text-[11px] text-[var(--docs-muted)] hover:text-[var(--docs-fg)] hover:border-[var(--docs-accent)] transition-colors"
       aria-label="Copy code"
     >
-      {copied ? "copied" : "copy"}
+      {status === "copied" && "copied"}
+      {status === "failed" && "❌ failed"}
+      {status === "idle" && "copy"}
     </button>
   );
 }
@@ -289,11 +329,10 @@ function DocsPage() {
                     <li key={item.id}>
                       <a
                         href={`#${item.id}`}
-                        className={`block rounded px-2 py-1 text-sm transition-colors ${
-                          active === item.id
-                            ? "bg-[var(--docs-surface-2)] text-[var(--docs-fg)] border-l-2 border-[var(--docs-accent)]"
-                            : "text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)]"
-                        }`}
+                        className={`block rounded px-2 py-1 text-sm transition-colors ${active === item.id
+                          ? "bg-[var(--docs-surface-2)] text-[var(--docs-fg)] border-l-2 border-[var(--docs-accent)]"
+                          : "text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)]"
+                          }`}
                       >
                         {item.label}
                       </a>
@@ -311,47 +350,47 @@ function DocsPage() {
           className="min-w-0 flex-1 overflow-y-auto px-6 py-8 lg:pl-10"
         >
           <div
-  role="alert"
-  className="mb-6 rounded-md border border-[var(--docs-amber)]/50 bg-[oklch(0.96_0.04_80)] px-4 py-3 text-sm text-[oklch(0.36_0.08_60)]"
->
-  <p className="font-bold">
-    ⚠️ CAUTION: EXPERIMENTAL SYSTEM
-  </p>
+            role="alert"
+            className="mb-6 rounded-md border border-[var(--docs-amber)]/50 bg-[oklch(0.96_0.04_80)] px-4 py-3 text-sm text-[oklch(0.36_0.08_60)]"
+          >
+            <p className="font-bold">
+              ⚠️ CAUTION: EXPERIMENTAL SYSTEM
+            </p>
 
-  <p className="mt-2">
-    This API is currently in its Pilot Testing phase. The system is
-    undergoing rapid development, and you should expect frequent updates.
-    Breaking changes to request schemas, authentication logic, or Redis
-    infrastructure may occur without prior notice.
-  </p>
+            <p className="mt-2">
+              This API is currently in its Pilot Testing phase. The system is
+              undergoing rapid development, and you should expect frequent updates.
+              Breaking changes to request schemas, authentication logic, or Redis
+              infrastructure may occur without prior notice.
+            </p>
 
-  <p className="mt-3 font-semibold">
-    Reporting Failures & Bugs
-  </p>
+            <p className="mt-3 font-semibold">
+              Reporting Failures & Bugs
+            </p>
 
-  <p className="mt-1">
-    To help us stabilize the engine, please report any unexpected errors,
-    proxy timeouts, latency lags, quota exhaustion, blocking, or performance
-    bottlenecks directly to me:
-  </p>
+            <p className="mt-1">
+              To help us stabilize the engine, please report any unexpected errors,
+              proxy timeouts, latency lags, quota exhaustion, blocking, or performance
+              bottlenecks directly to me:
+            </p>
 
-  <div className="mt-3 space-y-1">
-    <p>
-      <span className="font-semibold">Email:</span>{" "}
-      bhargav.joshi@actowiz.co.in
-    </p>
+            <div className="mt-3 space-y-1">
+              <p>
+                <span className="font-semibold">Email:</span>{" "}
+                bhargav.joshi@actowiz.co.in
+              </p>
 
-    <p>
-      <span className="font-semibold">Slack:</span>{" "}
-      https://actowizsolutions41121.slack.com/team/U05C0FGPB50
-    </p>
+              <p>
+                <span className="font-semibold">Slack:</span>{" "}
+                https://actowizsolutions41121.slack.com/team/U05C0FGPB50
+              </p>
 
-    <p>
-      <span className="font-semibold">Phone/WhatsApp:</span>{" "}
-      +91 9824818225
-    </p>
-  </div>
-</div>
+              <p>
+                <span className="font-semibold">Phone/WhatsApp:</span>{" "}
+                +91 9824818225
+              </p>
+            </div>
+          </div>
 
           <div className="mb-10">
             <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--docs-accent)]">
@@ -631,9 +670,9 @@ function DocsPage() {
 
               <Field name="contains" type="string">
                 custom_headers (boolean)
-                Allows overriding or adding custom request headers provided in the headers object.
-                When enabled, the provided headers are merged with the default headers.
-                <br/><b>Note:</b> Cookies can also be sent using the "cookies" key inside the headers object.
+                Allows overriding or adding custom request headers provided in the headers object.
+                When enabled, the provided headers are merged with the default headers.
+                <br /><b>Note:</b> Cookies can also be sent using the "cookies" key inside the headers object.
               </Field>
             </div>
 
@@ -1060,8 +1099,8 @@ function IssueModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [createdIssue, setCreatedIssue] = useState<IssueRecord | null>(null);
-
-  useEffect(() => {
+  const [issueCopied, setIssueCopied] = useState(false);
+  const copyTimeoutRef = useRef<number | null>(null); useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -1070,6 +1109,14 @@ function IssueModal({
       document.body.style.overflow = "";
     };
   }, [onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const urls = images.map((f) => URL.createObjectURL(f));
@@ -1133,7 +1180,35 @@ function IssueModal({
       setSubmitting(false);
     }
   };
+  /* ---------- Copy Utility ---------- */
+  async function copyToClipboard(text: string): Promise<boolean> {
+    if (!text) return false;
 
+    try {
+      // Primary: Modern Clipboard API
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback: execCommand method
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-999999px";
+        textarea.style.top = "-999999px";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        return success;
+      } catch (err) {
+        console.error("Copy failed:", err);
+        return false;
+      }
+    }
+  }
   const inputCls =
     "w-full rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-2 font-mono text-[13px] text-[var(--docs-fg)] placeholder:text-[var(--docs-muted)] focus:outline-none focus:border-[var(--docs-amber)] focus:ring-1 focus:ring-[var(--docs-amber)]/40 transition-colors";
   const labelCls =
@@ -1186,16 +1261,27 @@ function IssueModal({
               <button
                 type="button"
                 onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(createdIssue.issue_id);
-                    toast.success("Issue id copied");
-                  } catch {
-                    toast.error("Failed to copy issue id");
+                  const success = await copyToClipboard(createdIssue.issue_id);
+
+                  if (success) {
+                    setIssueCopied(true);
+
+                    if (copyTimeoutRef.current) {
+                      window.clearTimeout(copyTimeoutRef.current);
+                    }
+
+                    copyTimeoutRef.current = window.setTimeout(() => {
+                      setIssueCopied(false);
+                    }, 1800);
+
+                    toast.success("Issue ID copied to clipboard");
+                  } else {
+                    toast.error("Failed to copy issue ID");
                   }
                 }}
                 className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
               >
-                Copy Issue ID
+                {issueCopied ? "✅ Copied" : "Copy Issue ID"}
               </button>
               <button
                 type="button"
@@ -1214,135 +1300,134 @@ function IssueModal({
             </div>
           </div>
         ) : (
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
-          <div>
-            <label className={labelCls}>Domain</label>
-            <input
-              type="text"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              placeholder="example.com"
-              className={inputCls}
-            />
-            {errors.domain && <div className={errCls}>{errors.domain}</div>}
-          </div>
+          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+            <div>
+              <label className={labelCls}>Domain</label>
+              <input
+                type="text"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                placeholder="example.com"
+                className={inputCls}
+              />
+              {errors.domain && <div className={errCls}>{errors.domain}</div>}
+            </div>
 
-          <div>
-            <label className={labelCls}>API Key</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your API key"
-              className={inputCls}
-              autoComplete="off"
-            />
-            {errors.apiKey && <div className={errCls}>{errors.apiKey}</div>}
-          </div>
+            <div>
+              <label className={labelCls}>API Key</label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your API key"
+                className={inputCls}
+                autoComplete="off"
+              />
+              {errors.apiKey && <div className={errCls}>{errors.apiKey}</div>}
+            </div>
 
-          <div>
-            <label className={labelCls}>Developer Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="developer@example.com"
-              className={inputCls}
-            />
-            {errors.email && <div className={errCls}>{errors.email}</div>}
-          </div>
+            <div>
+              <label className={labelCls}>Developer Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="developer@example.com"
+                className={inputCls}
+              />
+              {errors.email && <div className={errCls}>{errors.email}</div>}
+            </div>
 
-          <div>
-            <label className={labelCls}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Explain the issue in detail..."
-              rows={4}
-              className={`${inputCls} resize-y leading-6`}
-            />
-            {errors.description && (
-              <div className={errCls}>{errors.description}</div>
-            )}
-          </div>
+            <div>
+              <label className={labelCls}>Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Explain the issue in detail..."
+                rows={4}
+                className={`${inputCls} resize-y leading-6`}
+              />
+              {errors.description && (
+                <div className={errCls}>{errors.description}</div>
+              )}
+            </div>
 
-          <div>
-            <label className={labelCls}>Images (Optional)</label>
-            <label
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
-              }}
-              className={`flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-4 py-6 text-center transition-colors ${
-                dragOver
+            <div>
+              <label className={labelCls}>Images (Optional)</label>
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
+                }}
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-4 py-6 text-center transition-colors ${dragOver
                   ? "border-[var(--docs-amber)] bg-[var(--docs-surface-2)]"
                   : "border-[var(--docs-border)] bg-[var(--docs-surface)] hover:bg-[var(--docs-surface-2)]"
-              }`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => e.target.files && addFiles(e.target.files)}
-              />
-              <div className="font-mono text-xs text-[var(--docs-fg-soft)]">
-                Drag &amp; drop images here, or click to select
-              </div>
-              <div className="mt-1 font-mono text-[11px] text-[var(--docs-muted)]">
-                PNG, JPG, GIF — multiple allowed
-              </div>
-            </label>
+                  }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && addFiles(e.target.files)}
+                />
+                <div className="font-mono text-xs text-[var(--docs-fg-soft)]">
+                  Drag &amp; drop images here, or click to select
+                </div>
+                <div className="mt-1 font-mono text-[11px] text-[var(--docs-muted)]">
+                  PNG, JPG, GIF — multiple allowed
+                </div>
+              </label>
 
-            {previews.length > 0 && (
-              <div className="mt-3 grid grid-cols-4 gap-2">
-                {previews.map((src, i) => (
-                  <div
-                    key={i}
-                    className="group relative aspect-square overflow-hidden rounded border border-[var(--docs-border)] bg-[var(--docs-surface)]"
-                  >
-                    <img
-                      src={src}
-                      alt={`upload-${i}`}
-                      className="h-full w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
-                      aria-label="Remove image"
+              {previews.length > 0 && (
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {previews.map((src, i) => (
+                    <div
+                      key={i}
+                      className="group relative aspect-square overflow-hidden rounded border border-[var(--docs-border)] bg-[var(--docs-surface)]"
                     >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                      <img
+                        src={src}
+                        alt={`upload-${i}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        aria-label="Remove image"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-[var(--docs-border)] pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-md border border-[var(--docs-amber)] bg-[var(--docs-amber)] px-3 py-1.5 font-mono text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
-            >
-              {submitting ? "Submitting..." : "Submit Issue"}
-            </button>
-          </div>
-        </form>
+            <div className="flex items-center justify-end gap-2 border-t border-[var(--docs-border)] pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-[var(--docs-border)] bg-[var(--docs-surface)] px-3 py-1.5 font-mono text-xs text-[var(--docs-fg-soft)] hover:text-[var(--docs-fg)] hover:bg-[var(--docs-surface-2)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-md border border-[var(--docs-amber)] bg-[var(--docs-amber)] px-3 py-1.5 font-mono text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
+              >
+                {submitting ? "Submitting..." : "Submit Issue"}
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>
